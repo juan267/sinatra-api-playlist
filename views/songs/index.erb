@@ -50,6 +50,35 @@
                     console.log(playlist);
                 });
             };
+
+            this.addNewSong = function (options) {
+                var playlist = this;
+                var promise = $.ajax({
+                    type: "POST",
+                    url: '/api/v1/songs/new',
+                    dataType: 'json',
+                    data: options.data
+                });
+
+                promise.done(function (data) {
+                            if (options.success) {
+                                options.success();
+                            }
+                            playlist.reload();
+                        }
+                );
+
+                promise.fail(function (response) {
+                    var errors = response.responseJSON.errors;
+                    console.log(errors); // show response from the php script.
+                    if (options.errors) {
+                        options.errors(errors);
+                    }
+                });
+
+
+            };
+
             this.notifySubscribers = function () {
                 for (var i = 0; i < this.callbacks.length; i++) {
                     this.callbacks[i](this);
@@ -61,45 +90,26 @@
         }
 
         function PlaylistView($container) {
-            this.$container = $container;
             this.refresh = function (playlistModel) {
-                this.$container.html('');
+                $container.html('');
                 for (var i = 0; i < playlistModel.songs.length; i++) {
                     var song = playlistModel.songs[i];
                     var $li = $('<li><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
-                    this.$container.append($li);
+                    $container.append($li);
                 }
 
             }
         }
 
-
-        var model = new PlaylistModel();
-        var view = new PlaylistView($('#playlist-songs'));
-
-        model.subscribe(function (playlist) {
-            view.refresh(playlist)
-        });
-
-        $('#song-form-new-ajax').submit(function (event) {
-            $form = $(this);
-            event.preventDefault();
-            var promise = $.ajax({
-                type: "POST",
-                url: '/api/v1/songs/new',
-                dataType: 'json',
-                data: $form.serialize() // serializes the form's elements.
-            });
-
-            promise.done(function (data) {
-                console.log(data); // show response from the php script.
+        function SongFormView($form) {
+            this.clearForm = function () {
+                console.log("clear");
                 $form.find('input.clearable').val('');
                 $form.find('.validation_error').text('');
-                model.reload();
-            });
-            promise.fail(function (data) {
-                var errors = data.responseJSON.errors;
-                console.log(errors); // show response from the php script.
+            };
+            this.updateErrors = function (errors) {
+                console.log("updateErrors");
+                console.log(errors);
                 $form.find('.validation_error').text('');
                 for (var prop in errors) {
                     if (errors.hasOwnProperty(prop)) {
@@ -107,8 +117,33 @@
                         $form.find("#song_" + prop + "_error").text(message);
                     }
                 }
-            });
+            };
 
+            this.bindSubmit = function (playListModel) {
+                var formView = this;
+                $form.submit(function (event) {
+                    event.preventDefault();
+                    playlistModel.addNewSong({
+                        data: $form.serialize(),
+                        success: formView.clearForm,
+                        errors: formView.updateErrors
+                    });
+                });
+            }
+
+        }
+
+
+        var playlistModel = new PlaylistModel();
+        var playlistView = new PlaylistView($('#playlist-songs'));
+
+        playlistModel.subscribe(function (playlist) {
+            playlistView.refresh(playlist)
         });
+
+        var songFormView = new SongFormView($('#song-form-new-ajax'));
+
+        songFormView.bindSubmit(playlistModel);
+
     });
 </script>
