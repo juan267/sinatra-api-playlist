@@ -1,12 +1,13 @@
 <h1>Playlist</h1>
-<ul>
+<ul id="playlist-songs">
   <% @songs.each do |song| %>
-      <li><a href="/song/<%= song.id %>"><%= song.title %> by <%= song.artist %></a></li>
+      <li><a href="/song/<%= song.id %>"><%= song.title %></a> by <%= song.artist %></li>
   <% end %>
 </ul>
 
 
 <h1>Add New Song with Ajax</h1>
+
 <form id="song-form-new-ajax" action="/songs/new" method="post" class="song-form">
   <div class="form_field">
     <label for="song_title">Title</label>
@@ -28,10 +29,30 @@
 <script>
     $(document).ready(function () {
 
-        function refreshPlaylist(){
-            
-        }
+        function refreshPlaylist() {
 
+            $container = $('#playlist-songs');
+
+            var promise = $.ajax({
+                type: "GET",
+                url: '/api/v1/songs',
+                dataType: 'json'
+            });
+
+            promise.done(function (data) {
+                $container.html('');
+                for (var i = 0; i < data.length; i++) {
+                    var song = data[i];
+                    console.log(song);
+                    var $li = $('<li><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
+                    $container.append($li);
+                }
+            });
+            promise.fail(function (data) {
+                debugger;
+                console.log(data);
+            });
+        }
 
 
         $('#song-form-new-ajax').submit(function (event) {
@@ -53,8 +74,8 @@
                 var errors = data.responseJSON.errors;
                 console.log(errors); // show response from the php script.
                 $form.find('.validation_error').text('');
-                for(var prop in errors){
-                    if(errors.hasOwnProperty(prop)){
+                for (var prop in errors) {
+                    if (errors.hasOwnProperty(prop)) {
                         var message = errors[prop][0];
                         $form.find("#song_" + prop + "_error").text(message);
                     }
