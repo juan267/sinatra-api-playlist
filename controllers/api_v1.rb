@@ -20,6 +20,6 @@ post '/api/v1/songs/new' do
   if @song.save
     @song.to_json
   else
-    halt 400, {errors: @song.errors}
+    halt 400, {errors: @song.errors}.to_json
   end
 end
