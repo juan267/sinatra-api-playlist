@@ -10,15 +10,15 @@
 <form id="song-form-new-ajax" action="/songs/new" method="post" class="song-form">
   <div class="form_field">
     <label for="song_title">Title</label>
-    <input type="text" id="song_title" name="song[title]" value=""/>
+    <input type="text" id="song_title" name="song[title]" value="" class="clearable"/>
 
-    <div id="song_title_error" class="validation_error "></div>
+    <div id="song_title_error" class="validation_error"></div>
   </div>
   <div class="form_field">
     <label for="song_artist">Artist</label>
-    <input type="text" id="song_artist" name="song[artist]" value=""/>
+    <input type="text" id="song_artist" name="song[artist]" value="" class="clearable"/>
 
-    <div id="song_artist_error" class="validation_error "></div>
+    <div id="song_artist_error" class="validation_error"></div>
   </div>
   <div class="form_buttons">
     <input type="submit">
@@ -27,20 +27,38 @@
 
 <script>
     $(document).ready(function () {
+
+        function refreshPlaylist(){
+            
+        }
+
+
+
         $('#song-form-new-ajax').submit(function (event) {
+            $form = $(this);
             event.preventDefault();
             var promise = $.ajax({
                 type: "POST",
                 url: '/api/v1/songs/new',
                 dataType: 'json',
-                data: $(this).serialize() // serializes the form's elements.
+                data: $form.serialize() // serializes the form's elements.
             });
 
             promise.done(function (data) {
                 console.log(data); // show response from the php script.
+                $form.find('input.clearable').val('');
+                refreshPlaylist();
             });
             promise.fail(function (data) {
-                console.log(data.responseJSON.errors); // show response from the php script.
+                var errors = data.responseJSON.errors;
+                console.log(errors); // show response from the php script.
+                $form.find('.validation_error').text('');
+                for(var prop in errors){
+                    if(errors.hasOwnProperty(prop)){
+                        var message = errors[prop][0];
+                        $form.find("#song_" + prop + "_error").text(message);
+                    }
+                }
             });
 
         });
