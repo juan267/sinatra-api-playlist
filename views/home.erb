@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+<body>
+<h1>Playlist</h1>
+<ul>
+  <% @songs.each do |song| %>
+    <li><%= song.title %> by <%= song.artist %></li>
+  <% end %>
+</ul>
+</body>
+</html>
