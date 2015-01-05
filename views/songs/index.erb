@@ -1,28 +1,30 @@
 <h1>Playlist</h1>
 
 
-<h1>Add New Song with Ajax</h1>
+<div id="form_modal">
+    <form id="song-form-new-ajax" action="/songs/new" method="post" class="song-form">
+      <div class="form_title">Add New Song with Ajax</div>
+      <div class="form_field">
+        <label for="song_title">Title</label>
+        <input type="text" id="song_title" name="song[title]" value="" class="clearable"/>
 
-<form id="song-form-new-ajax" action="/songs/new" method="post" class="song-form">
-  <div class="form_field">
-    <label for="song_title">Title</label>
-    <input type="text" id="song_title" name="song[title]" value="" class="clearable"/>
+        <div id="song_title_error" class="validation_error"></div>
+      </div>
+      <div class="form_field">
+        <label for="song_artist">Artist</label>
+        <input type="text" id="song_artist" name="song[artist]" value="" class="clearable"/>
 
-    <div id="song_title_error" class="validation_error"></div>
-  </div>
-  <div class="form_field">
-    <label for="song_artist">Artist</label>
-    <input type="text" id="song_artist" name="song[artist]" value="" class="clearable"/>
+        <div id="song_artist_error" class="validation_error"></div>
+      </div>
 
-    <div id="song_artist_error" class="validation_error"></div>
-  </div>
+      <div class="form_buttons">
+        <input type="submit">
+        <input type="button" class="reset" value="Reset"/>
+        <input type="button" class="delete" value="Delete"/>
+      </div>
+    </form>
 
-  <div class="form_buttons">
-    <input type="submit">
-    <input type="button" class="reset" value="Reset"/>
-    <input type="button" class="delete" value="Delete"/>
-  </div>
-</form>
+</div>
 
 <ul id="playlist-songs">
 </ul>
@@ -74,7 +76,6 @@
         playlistView.onSongClick(function (song_id) {
             songFormView.setupEdit(song_id, playlistModel);
         });
-
 
     });
 </script>

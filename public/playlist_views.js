@@ -39,6 +39,7 @@
             $form.data('song_id', null);
             $form.find(':submit').val("Add");
             $form.find('input.delete').hide();
+            $form.find('.form_title').text('Add a Song');
         };
 
         this.updateErrors = function(errors) {
@@ -61,6 +62,7 @@
                 $form.data('song_id', song.id);
                 $form.find('#song_title').val(song.title);
                 $form.find('#song_artist').val(song.artist);
+                $form.find('.form_title').text('Edit ' + song.title);
                 $form.find(':submit').val("Save");
                 $form.find('input.delete').show();
             }

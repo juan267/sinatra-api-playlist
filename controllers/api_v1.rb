@@ -3,7 +3,7 @@ before '/api/v1/*' do
 end
 
 get '/api/v1/songs' do
-  Song.all.to_json
+  Song.order(id: :asc).to_json
 end
 
 get '/api/v1/song/:id' do
