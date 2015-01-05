@@ -1,9 +1,4 @@
 <h1>Playlist</h1>
-<ul id="playlist-songs">
-  <% @songs.each do |song| %>
-      <li><a href="/song/<%= song.id %>"><%= song.title %></a> by <%= song.artist %></li>
-  <% end %>
-</ul>
 
 
 <h1>Add New Song with Ajax</h1>
@@ -25,6 +20,12 @@
     <input type="submit">
   </div>
 </form>
+
+<ul id="playlist-songs">
+  <% @songs.each do |song| %>
+      <li><a href="/song/<%= song.id %>"><%= song.title %></a> by <%= song.artist %></li>
+  <% end %>
+</ul>
 
 <script>
     $(document).ready(function () {
@@ -68,6 +69,7 @@
             promise.done(function (data) {
                 console.log(data); // show response from the php script.
                 $form.find('input.clearable').val('');
+                $form.find('.validation_error').text('');
                 refreshPlaylist();
             });
             promise.fail(function (data) {

@@ -1,14 +1,6 @@
 <h1><%= @song.title %></h1>
 <div><%= @song.artist %></div>
 
-<div class="menu menu__song">
-  <a href="/song/<%= @song.id %>/edit">Edit</a> |
 
-  <form class="deleter_form" id="song-delete-form" action="/song/<%= @song.id %>" method="post">
-    <div style="margin:0;padding:0">
-      <input name="_method" type="hidden" value="delete" />
-    </div>
-  </form>
+<%= erb :"songs/_song_menu" %>
 
-  <a href="#" onclick="document.getElementById('song-delete-form').submit()">Delete</a>
-</div>

@@ -1,5 +1,5 @@
 get '/' do
-  @songs = Song.all.order(id: :asc)
+  @songs = Song.all
   erb :home
 end
 

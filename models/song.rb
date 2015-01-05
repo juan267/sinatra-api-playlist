@@ -5,6 +5,8 @@ class Song < ActiveRecord::Base
       lambda { |msg_symbol, labels|  
         "#{labels[:value]} by that artist is already in the playlist"
       }
+
+  default_scope -> { order(id: :desc) }
 end
 
 

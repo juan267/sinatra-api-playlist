@@ -3,3 +3,5 @@
 <form action="/song/<%= @song.id %>" method="post" class="song-form <%= @song.errors.empty? ?  "" : "has_errors" %>">
   <%= erb :"songs/_form_elements" %>
 </form>
+
+<%= erb :"songs/_song_menu" %>
