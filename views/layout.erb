@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <style>
+      html {
+          font-family: sans-serif;
+      }
+
+      form.song-form {
+          background-color: #eee;
+          border: 1px solid #blue;
+          padding: 10px;
+      }
+
+      .form_field {
+          margin: 10px 0px;
+      }
+
+      .form_field.invalid input {
+          background-color: #fdd;
+      }
+
+      .form_field.invalid {
+          border: 1px solid red;
+          padding: 3px;
+          margin: 3px;
+      }
+
+      .validation_error {
+          color: #DD3333;
+      }
+
+      .form_buttons {
+          margin: 10px 0px 0px 0px;
+      }
+
+      .deleter_form {
+          display: none;
+      }
+
+      .menu {
+          border-top: 1px solid #ccc;
+          margin: 10px;
+          padding: 10px;
+      }
+  </style>
+
+</head>
+<body>
+
+<%= yield %>
+
+<div class="menu menu__all">
+  <a href="/songs">All Songs</a> | <a href="/songs/new">New Song</a>
+</div>
+
+</body>
+</html>

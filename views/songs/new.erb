@@ -1,0 +1,4 @@
+<h1>Add New Song</h1>
+<form action="/songs/new" method="post" class="song-form <%= @song.errors.empty? ?  "" : "has_errors" %>">
+    <%= erb :"songs/_form_elements" %>
+</form>

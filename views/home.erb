@@ -1,13 +1,6 @@
-<!doctype html>
-<html>
-<body>
 <h1>Playlist</h1>
-<ul>
-  <% @songs.each do |song| %>
-      <li><%= song.title %> by <%= song.artist %></li>
-  <% end %>
-</ul>
 
+<%= erb :"songs/index" %>
 
 <hr/>
 <h1>Api</h1>
@@ -16,6 +9,3 @@
   <li><a href="/api/v1/song/1">/api/v1/song/1</a></li>
   <li><a href="/api/v1/song/9999">/api/v1/song/9999 (error handling)</a></li>
 </ul>
-
-</body>
-</html>

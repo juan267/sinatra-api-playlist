@@ -11,6 +11,7 @@ configure do
 end
 
 # Set up the controllers and helpers
+Dir[APP_ROOT.join('helpers', '*.rb')].each { |file| require file }
 Dir[APP_ROOT.join('controllers', '*.rb')].each { |file| require file }
 
 # Set up the database and models

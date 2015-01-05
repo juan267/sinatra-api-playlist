@@ -1,0 +1,5 @@
+<h1>Edit Song</h1>
+
+<form action="/song/<%= @song.id %>" method="post" class="song-form <%= @song.errors.empty? ?  "" : "has_errors" %>">
+  <%= erb :"songs/_form_elements" %>
+</form>

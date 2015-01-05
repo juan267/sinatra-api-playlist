@@ -1,0 +1,21 @@
+<div class="form_field <%= @song.errors.include?(:title) ? "invalid" : "" %>">
+  <label for="song_title">Title</label>
+  <input type="text" id="song_title" name="song[title]" value="<%= h @song.title %>"/>
+  <% if @song.errors.include?(:title) %>
+      <div class="validation_error">
+        <%= @song.errors[:title].first %>
+      </div>
+  <% end %>
+</div>
+<div class="form_field <%= @song.errors.include?(:artist) ? "invalid" : "" %>">
+  <label for="song_artist">Artist</label>
+  <input type="text" id="song_artist" name="song[artist]" value="<%= h @song.artist %>"/>
+  <% if @song.errors.include?(:artist) %>
+      <div class="validation_error">
+        <%= @song.errors[:artist].first %>
+      </div>
+  <% end %>
+</div>
+<div class="form_buttons">
+  <input type="submit">
+</div>
