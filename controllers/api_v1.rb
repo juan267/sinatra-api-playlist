@@ -14,6 +14,12 @@ get '/api/v1/song/:id' do
   end
 end
 
-put '/api/v1/song/:id' do
-
+post '/api/v1/songs/new' do
+  song_params = params[:song] || {}
+  @song = Song.new(title: song_params[:title], artist: song_params[:artist])
+  if @song.save
+    @song.to_json
+  else
+    halt 400, {errors: @song.errors}
+  end
 end
