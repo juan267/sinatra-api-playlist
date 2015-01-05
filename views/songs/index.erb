@@ -16,39 +16,127 @@
 
     <div id="song_artist_error" class="validation_error"></div>
   </div>
+
   <div class="form_buttons">
     <input type="submit">
+    <input type="button" class="reset" value="Reset"/>
+    <input type="button" class="delete" value="Delete" style="display: none"/>
   </div>
 </form>
 
 <ul id="playlist-songs">
-  <% @songs.each do |song| %>
-      <li><a href="/song/<%= song.id %>"><%= song.title %></a> by <%= song.artist %></li>
-  <% end %>
 </ul>
 
 <script>
     $(document).ready(function () {
 
+        var dataPreload = <%= @songs.to_json %>;
+
         function PlaylistModel() {
+            this.loaded = false;
             this.songs = [];
             this.callbacks = [];
-            this.reload = function () {
+
+            this.load = function (songs) {
+                this.songs = songs;
+                this.notifySubscribers();
+                this.loaded = true;
+            };
+
+            this.reload = function (callback) {
                 var playlist = this;
+                playlist.loading = true;
                 var promise = $.ajax({
                     type: "GET",
                     url: '/api/v1/songs',
                     dataType: 'json'
                 });
                 promise.done(function (data) {
-                    playlist.songs = data;
-                    playlist.notifySubscribers();
+                    playlist.load(data);
+                    playlist.loading = false;
+                    if (callback) {
+                        callback();
+                    }
                 });
                 promise.fail(function (data) {
+                    playlist.loading = false;
                     debugger;
                     console.log(data);
                     console.log(playlist);
                 });
+            };
+
+            this.findSongById = function (id) {
+                for (var i = 0; i < this.songs.length; i++) {
+                    if (this.songs[i]['id'] == id) {
+                        return this.songs[i];
+                    }
+                }
+                return null;
+            };
+
+            this.deleteSong = function (songIdRaw, options) {
+                var songId = parseInt(songIdRaw, 10);
+                if (songId > 0) {
+                    var playlist = this;
+                    var promise = $.ajax({
+                        type: "POST",
+                        url: '/api/v1/song/' + songId,
+                        method: 'DELETE',
+                        dataType: 'json'
+                    });
+
+                    promise.done(function (data) {
+                                if (options.success) {
+                                    options.success();
+                                }
+                                playlist.reload();
+                            }
+                    );
+
+                    promise.fail(function (response) {
+                        var json = response.responseJSON;
+                        var errors = json ? json.errors : [];
+                        console.log(errors); // show response from the php script.
+                        if (options.errors) {
+                            options.errors(errors);
+                        }
+                    });
+                } else {
+                    throw "Invalid Song Id " + songIdRaw
+                }
+            };
+
+            this.editSong = function (songIdRaw, options) {
+                var songId = parseInt(songIdRaw, 10);
+
+                if (songId > 0) {
+                    var playlist = this;
+                    var promise = $.ajax({
+                        type: "POST",
+                        url: '/api/v1/song/' + songId,
+                        dataType: 'json',
+                        data: options.data
+                    });
+
+                    promise.done(function (data) {
+                                if (options.success) {
+                                    options.success();
+                                }
+                                playlist.reload();
+                            }
+                    );
+
+                    promise.fail(function (response) {
+                        var errors = response.responseJSON.errors;
+                        console.log(errors); // show response from the php script.
+                        if (options.errors) {
+                            options.errors(errors);
+                        }
+                    });
+                } else {
+                    throw "Invalid Song Id " + songIdRaw
+                }
             };
 
             this.addNewSong = function (options) {
@@ -75,8 +163,6 @@
                         options.errors(errors);
                     }
                 });
-
-
             };
 
             this.notifySubscribers = function () {
@@ -94,19 +180,41 @@
                 $container.html('');
                 for (var i = 0; i < playlistModel.songs.length; i++) {
                     var song = playlistModel.songs[i];
-                    var $li = $('<li><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
+                    var $li = $('<li class="song"><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
+                    $li.data('song_id', song.id);
                     $container.append($li);
                 }
-
             }
+
+            this.onSongClick = function (callback) {
+                this._onSongClick = callback;
+            };
+
+            var playListView = this;
+
+            $container.on("click", "li.song a", function (event) {
+                if (playListView._onSongClick) {
+                    event.preventDefault();
+                    var $el = $(event.target);
+                    var song_id = parseInt($el.closest('li').data('song_id'), 10);
+                    if (song_id > 0) {
+                        playlistView._onSongClick(song_id);
+                    }
+                }
+            });
         }
 
         function SongFormView($form) {
+            var thisView = this;
             this.clearForm = function () {
                 console.log("clear");
                 $form.find('input.clearable').val('');
                 $form.find('.validation_error').text('');
+                $form.data('song_id', null);
+                $form.find(':submit').val("Add");
+                $form.find('input.delete').hide();
             };
+
             this.updateErrors = function (errors) {
                 console.log("updateErrors");
                 console.log(errors);
@@ -119,17 +227,79 @@
                 }
             };
 
-            this.bindSubmit = function (playListModel) {
-                var formView = this;
-                $form.submit(function (event) {
-                    event.preventDefault();
-                    playlistModel.addNewSong({
-                        data: $form.serialize(),
-                        success: formView.clearForm,
-                        errors: formView.updateErrors
-                    });
-                });
-            }
+            this.setupEdit = function (id, playlistModel) {
+                var song = playlistModel.findSongById(id);
+                this.clearForm();
+
+                if (song) {
+                    $form.data('song_id', song.id);
+                    $form.find('#song_title').val(song.title);
+                    $form.find('#song_artist').val(song.artist);
+                    $form.find(':submit').val("Save");
+                    $form.find('input.delete').show();
+                }
+            };
+
+            this.setupAdd = function () {
+                this.clearForm();
+            };
+
+            this.formData = function () {
+                return $form.serialize();
+            };
+
+            this.isEditing = function () {
+                return this.currentEditingId() > 0;
+            };
+
+            this.currentEditingId = function () {
+                return parseInt($form.data('song_id'), 10);
+            };
+
+            this.onAdd = function (callback) {
+                this._onAddCallback = callback;
+            };
+
+            this.onEdit = function (callback) {
+                this._onEditCallback = callback;
+            };
+
+            this.onDelete = function (callback) {
+                this._onDeleteCallback = callback;
+            };
+
+            thisView.clearForm();
+
+
+            $form.find("input.reset").click(function () {
+                thisView.clearForm();
+            });
+
+            $form.find("input.delete").click(function () {
+                event.preventDefault();
+                if (thisView.isEditing()) {
+                    if (thisView._onDeleteCallback) {
+                        if (confirm("Are you sure you want to delete it?")) {
+                            thisView._onDeleteCallback(thisView);
+                        }
+                    }
+
+                }
+            });
+
+            $form.submit(function (event) {
+                event.preventDefault();
+                if (thisView.isEditing()) {
+                    if (thisView._onEditCallback) {
+                        thisView._onEditCallback(thisView);
+                    }
+
+                } else {
+                    if (thisView._onAddCallback) {
+                        thisView._onAddCallback(thisView);
+                    }
+                }
+            });
 
         }
 
@@ -141,9 +311,39 @@
             playlistView.refresh(playlist)
         });
 
+        // Render with the preload
+        playlistModel.load(dataPreload);
+
         var songFormView = new SongFormView($('#song-form-new-ajax'));
 
-        songFormView.bindSubmit(playlistModel);
+        songFormView.onAdd(function (formView) {
+            playlistModel.addNewSong({
+                data: formView.formData(),
+                success: formView.clearForm,
+                errors: formView.updateErrors
+            });
+        });
+
+        songFormView.onEdit(function (formView) {
+            playlistModel.editSong(formView.currentEditingId(), {
+                data: formView.formData(),
+                success: formView.clearForm,
+                errors: formView.updateErrors
+            });
+        });
+
+        songFormView.onDelete(function (formView) {
+            playlistModel.deleteSong(formView.currentEditingId(), {
+                success: formView.clearForm,
+                errors: formView.updateErrors
+            });
+        });
+
+
+        playlistView.onSongClick(function (song_id) {
+            songFormView.setupEdit(song_id, playlistModel);
+        });
+
 
     });
 </script>
