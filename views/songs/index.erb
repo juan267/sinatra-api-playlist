@@ -30,31 +30,56 @@
 <script>
     $(document).ready(function () {
 
-        function refreshPlaylist() {
-
-            $container = $('#playlist-songs');
-
-            var promise = $.ajax({
-                type: "GET",
-                url: '/api/v1/songs',
-                dataType: 'json'
-            });
-
-            promise.done(function (data) {
-                $container.html('');
-                for (var i = 0; i < data.length; i++) {
-                    var song = data[i];
-                    console.log(song);
-                    var $li = $('<li><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
-                    $container.append($li);
+        function PlaylistModel() {
+            this.songs = [];
+            this.callbacks = [];
+            this.reload = function () {
+                var playlist = this;
+                var promise = $.ajax({
+                    type: "GET",
+                    url: '/api/v1/songs',
+                    dataType: 'json'
+                });
+                promise.done(function (data) {
+                    playlist.songs = data;
+                    playlist.notifySubscribers();
+                });
+                promise.fail(function (data) {
+                    debugger;
+                    console.log(data);
+                    console.log(playlist);
+                });
+            };
+            this.notifySubscribers = function () {
+                for (var i = 0; i < this.callbacks.length; i++) {
+                    this.callbacks[i](this);
                 }
-            });
-            promise.fail(function (data) {
-                debugger;
-                console.log(data);
-            });
+            };
+            this.subscribe = function (subscriberFunction) {
+                this.callbacks.push(subscriberFunction)
+            };
         }
 
+        function PlaylistView($container) {
+            this.$container = $container;
+            this.refresh = function (playlistModel) {
+                this.$container.html('');
+                for (var i = 0; i < playlistModel.songs.length; i++) {
+                    var song = playlistModel.songs[i];
+                    var $li = $('<li><a href="/song/' + song['id'] + '">' + song['title'] + '</a> by ' + song['artist'] + '</li>');
+                    this.$container.append($li);
+                }
+
+            }
+        }
+
+
+        var model = new PlaylistModel();
+        var view = new PlaylistView($('#playlist-songs'));
+
+        model.subscribe(function (playlist) {
+            view.refresh(playlist)
+        });
 
         $('#song-form-new-ajax').submit(function (event) {
             $form = $(this);
@@ -70,7 +95,7 @@
                 console.log(data); // show response from the php script.
                 $form.find('input.clearable').val('');
                 $form.find('.validation_error').text('');
-                refreshPlaylist();
+                model.reload();
             });
             promise.fail(function (data) {
                 var errors = data.responseJSON.errors;
